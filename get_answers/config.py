@@ -87,7 +87,12 @@ Question: Are anti-type II collagen antibodies , anti-CCP , IgA RF and IgM RF as
 Example Answer: Yes.
 ### Input: Context: """
         },
-        "MedQA-USMLE": {}
+        "MedQA-USMLE": {
+        "Medllama-13B": """### Instruction: As a knowledgeable medical professional, your task is to identify the correct answer from the provided options {A, B, C, D, E}. There is no 'NA' option as one of these choices is definitively correct. Please be concise in your response, NO VERBOSITY. An example is provided for guidance:
+Example Question: A 55-year-old man presents to his primary care provider with increased urinary frequency. Over the past 3 months, he has been urinating 2-3 times more often than usual. He has started to feel dehydrated and has increased his water intake to compensate. He works as a bank teller. He has a 25-pack-year smoking history and drinks 8-10 beers per week. His temperature is 98°F (36.8°C), blood pressure is 114/68 mmHg, pulse is 100/min, and respirations are 18/min. Capillary refill is 3 seconds. His mucous membranes appear dry. The patient is instructed to hold all water intake. Urine specific gravity is 1.002 after 12 hours of water deprivation. The patient is given desmopressin but his urine specific gravity remains relatively unchanged. Which of the following is the most appropriate pharmacologic treatment for this patient's condition?
+A. Desmopressin; B. Furosemide; C. Mannitol; D. Metolazone; E. Spironolactone.
+Example Answer (strictly follow): D.
+Input: ###Question:"""}
     }
 
 def GPU_info():
@@ -113,4 +118,3 @@ def GPU_info():
 #     np.random.seed(seed)
 # #     torch.manual_seed(seed)
 # #     torch.cuda.manual_seed(seed)
-
