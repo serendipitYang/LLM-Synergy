@@ -40,7 +40,7 @@ def run_medmcqa_llama(input_file, llm, output_path):
     # Save results appending to the inital DF
     df["responses"] = responses
     df["suggested_answers"] = suggested_ans # post-processing
-    df.to_csv(output_path + "_" + llm + "_" + str(length) + ".csv", index=False)
+    df.to_csv(output_path + "_MedMCQA_" + llm + "_" + str(length) + ".csv", index=False)
     return 0
 
 def run_medmcqa_vicuna(input_file, llm, output_path):
@@ -74,7 +74,7 @@ def run_medmcqa_vicuna(input_file, llm, output_path):
     # Save results appending to the inital DF
     df["responses"] = responses
     df["suggested_answers"] = suggested_ans
-    df.to_csv(output_path + "_" + llm + "_" + str(length) + ".csv" ,index=False)
+    df.to_csv(output_path + "_MedMCQA_" + llm + "_" + str(length) + ".csv" ,index=False)
     return 0
 
 def run_medmcqa_medalp(input_file, llm, output_path):
@@ -145,7 +145,7 @@ def run_medmcqa_medllama(input_file, llm, output_path):
     # Save results appending to the inital DF
     df["responses"] = responses
     df["suggested_answers"] = suggested_ans
-    df.to_csv(output_path + "_" + llm + "_" + str(length) + ".csv", index=False)
+    df.to_csv(output_path + "_MedMCQA_" + llm + "_" + str(length) + ".csv", index=False)
     return 0
 
 
@@ -186,7 +186,7 @@ def run_pubmedqa_llama(input_file, llm, output_path):
     # Save results appending to the inital DF
     df["responses"] = responses
     df["suggested_answers"] = suggested_ans # post-processing
-    df.to_csv(output_path + "_" + llm + "_" + str(length) + ".csv", index=False)
+    df.to_csv(output_path + "_PubMedQA_" + llm + "_" + str(length) + ".csv", index=False)
     return 0
 
 def run_pubmedqa_medllama(input_file, llm, output_path):
@@ -200,7 +200,7 @@ def run_pubmedqa_medllama(input_file, llm, output_path):
     # load instruction
     inst = CONFIG.instructions["PubMedQA"][llm]
     responses, suggested_ans = [], []
-    for idx,q in tqdm(enumerate(df['question'])):
+    for idx,q in tqdm(enumerate(df['QUESTION'])):
         # Get QA pairs
         ipt = f"{df['CONTEXTS'][idx]}\nQuestion: {q}\n"
         
@@ -208,7 +208,7 @@ def run_pubmedqa_medllama(input_file, llm, output_path):
         prompt = inst + ipt + "### Response (only yes or no):"
         
         # run model and get response
-        max_len = len(pl.tokenizer(prompt)['input_ids'])+100
+        max_len = len(tokenizer(prompt)['input_ids'])+100
         responseInFull = pl(prompt, max_length= max_len, do_sample=True, 
                          num_return_sequences=1, temperature=0.3, top_k=40, 
                          top_p=0.5)
@@ -220,7 +220,7 @@ def run_pubmedqa_medllama(input_file, llm, output_path):
     # Save results appending to the inital DF
     df["responses"] = responses
     df["suggested_answers"] = suggested_ans # post-processing
-    df.to_csv(output_path + "_" + llm + "_" + str(length) + ".csv", index=False)
+    df.to_csv(output_path + "_PubMedQA_" + llm + "_" + str(length) + ".csv", index=False)
     return 0
 
 def run_pubmedqa_medalpaca(input_file, llm, output_path):
@@ -234,7 +234,7 @@ def run_pubmedqa_medalpaca(input_file, llm, output_path):
     # load instruction
     inst = CONFIG.instructions["PubMedQA"][llm]
     responses, suggested_ans = [], []
-    for idx,q in tqdm(enumerate(df['question'])):
+    for idx,q in tqdm(enumerate(df['QUESTION'])):
         # Get QA pairs
         ipt = f"{df['CONTEXTS'][idx]}\nQuestion: {q}\n"
         
@@ -254,11 +254,42 @@ def run_pubmedqa_medalpaca(input_file, llm, output_path):
     # Save results appending to the inital DF
     df["responses"] = responses
     df["suggested_answers"] = suggested_ans # post-processing
-    df.to_csv(output_path + "_" + llm + "_" + str(length) + ".csv", index=False)
+    df.to_csv(output_path + "_PubMedQA_" + llm + "_" + str(length) + ".csv", index=False)
     return 0
 
-
-
+def run_pubmedqa_vicuna(input_file, llm, output_path):
+    df = pd.read_csv(input_file)
+    length, rows = df.shape
+    llm = CONFIG.adapter_dict[llm]
+    # import model
+    pl = transformers.pipeline("text-generation", model=CONFIG.LLMs_path[llm]\
+                     , tokenizer=CONFIG.LLMs_path[llm]\
+                     , device_map="auto")
+    # load instruction
+    inst = CONFIG.instructions["PubMedQA"][llm]
+    responses, suggested_ans = [], []
+    for idx,q in tqdm(enumerate(df['QUESTION'])):
+        # Get QA pairs
+        ipt = f"{df['CONTEXTS'][idx]}\nQuestion: {q}\n"
+        
+        # Generate prompt
+        prompt = inst + ipt + "### Response (only yes or no):"
+        
+        # run model and get response
+        max_len = len(pl.tokenizer(prompt)['input_ids'])+100
+        responseInFull = pl(prompt, max_length= max_len, do_sample=True, 
+                         num_return_sequences=1, temperature=0.3, top_k=40, 
+                         top_p=0.5)
+        response = responseInFull[0]["generated_text"]
+        responses.append(response)
+        
+        ans = response[len(prompt):]
+        suggested_ans.append(ans)
+    # Save results appending to the inital DF
+    df["responses"] = responses
+    df["suggested_answers"] = suggested_ans # post-processing
+    df.to_csv(output_path + "_PubMedQA_" + llm + "_" + str(length) + ".csv", index=False)
+    return 0
 
 #medqa-usmle
 def run_medqa_usmle_medllama(input_file, llm, output_path):
@@ -283,7 +314,7 @@ def run_medqa_usmle_medllama(input_file, llm, output_path):
         prompt = inst + ipt + "### Answer (only A, B, C, D, or E) :"
         
         # run model and get response
-        max_len = len(pl.tokenizer(prompt)['input_ids'])+230
+        max_len = len(tokenizer(prompt)['input_ids'])+210
         responseInFull = pl(prompt, max_length= max_len, do_sample=True, 
                          num_return_sequences=1, temperature=0.3, top_k=40, 
                          top_p=0.5)
@@ -295,10 +326,117 @@ def run_medqa_usmle_medllama(input_file, llm, output_path):
     # Save results appending to the inital DF
     df["responses"] = responses
     df["suggested_answers"] = suggested_ans
-    df.to_csv(output_path + "_" + llm + "_" + str(length) + ".csv", index=False)
+    df.to_csv(output_path + "_MedQA-USMLE_" + llm + "_" + str(length) + ".csv", index=False)
     return 0
 
+def run_medqa_usmle_llama(input_file, llm, output_path):
+    df = pd.read_csv(input_file)
+    length, rows = df.shape
+    llm = CONFIG.adapter_dict[llm]
+    # import model
+    print("----****----import model----****----")
+    pl = transformers.pipeline("text-generation", model=CONFIG.LLMs_path[llm]\
+                     , tokenizer=CONFIG.LLMs_path[llm]\
+                     , device_map="auto")
+    # load instruction
+    inst = CONFIG.instructions["MedQA-USMLE"][llm]
+    responses, suggested_ans = [], []
+    print("----****----Start iterating----****----")
+    for idx,q in tqdm(enumerate(df['question'])):
+        # Get QA pairs
+        ipt = f"{q}\n### Options: A. {df['option_A'][idx]}; B. {df['option_B'][idx]}"\
+        f"; C. {df['option_C'][idx]}; D. {df['option_D'][idx]}; E. {df['option_E'][idx]}\n"
 
+        # Generate prompt
+        prompt = inst + ipt + "### Answer (only A, B, C, D, or E) :"
+        
+        # run model and get response
+        max_len = len(pl.tokenizer(prompt)['input_ids'])+100
+        responseInFull = pl(prompt, max_length= max_len, do_sample=True, 
+                         num_return_sequences=1, temperature=0.3, top_k=40, 
+                         top_p=0.5)
+        response = responseInFull[0]["generated_text"]
+        responses.append(response)
+        
+        ans = response[len(prompt):]
+        suggested_ans.append(ans)
+    # Save results appending to the inital DF
+    df["responses"] = responses
+    df["suggested_answers"] = suggested_ans
+    df.to_csv(output_path + "_MedQA-USMLE_" + llm + "_" + str(length) + ".csv", index=False)
+    return 0
+
+def run_medqa_usmle_vicuna(input_file, llm, output_path):
+    df = pd.read_csv(input_file)
+    length, rows = df.shape
+    llm = CONFIG.adapter_dict[llm]
+    # import model
+    print("----****----import model----****----")
+    pl = transformers.pipeline("text-generation", model=CONFIG.LLMs_path[llm]\
+                     , tokenizer=CONFIG.LLMs_path[llm]\
+                     , device_map="auto")
+    # load instruction
+    inst = CONFIG.instructions["MedQA-USMLE"][llm]
+    responses, suggested_ans = [], []
+    print("----****----Start iterating----****----")
+    for idx,q in tqdm(enumerate(df['question'])):
+        # Get QA pairs
+        ipt = f"{q}\n### Options: A. {df['option_A'][idx]}; B. {df['option_B'][idx]}"\
+        f"; C. {df['option_C'][idx]}; D. {df['option_D'][idx]}; E. {df['option_E'][idx]}\n"
+
+        # Generate prompt
+        prompt = inst + ipt + "### Answer (only A, B, C, D, or E) :"
+        
+        # run model and get response
+        max_len = len(pl.tokenizer(prompt)['input_ids'])+100
+        responseInFull = pl(prompt, max_length= max_len, do_sample=True, 
+                         num_return_sequences=1, temperature=0.3, top_k=40, 
+                         top_p=0.5)
+        response = responseInFull[0]["generated_text"]
+        responses.append(response)
+        
+        ans = response[len(prompt):]
+        suggested_ans.append(ans)
+    # Save results appending to the inital DF
+    df["responses"] = responses
+    df["suggested_answers"] = suggested_ans
+    df.to_csv(output_path + "_MedQA-USMLE_" + llm + "_" + str(length) + ".csv", index=False)
+    return 0
+
+def run_medqa_usmle_medalpaca(input_file, llm, output_path):
+    df = pd.read_csv(input_file)
+    length, rows = df.shape
+    llm = CONFIG.adapter_dict[llm]
+    # import model
+    print("----****----import model----****----")
+    pl = transformers.pipeline("text-generation", model=CONFIG.LLMs_path[llm]\
+                     , tokenizer=CONFIG.LLMs_path[llm]\
+                     , device_map="auto")
+    # load instruction
+    inst = CONFIG.instructions["MedQA-USMLE"][llm]
+    responses, suggested_ans = [], []
+    print("----****----Start iterating----****----")
+    for idx,q in tqdm(enumerate(df['question'])):
+        # Get QA pairs
+        ipt = f"{q}\n### Options: A. {df['option_A'][idx]}; B. {df['option_B'][idx]}"\
+        f"; C. {df['option_C'][idx]}; D. {df['option_D'][idx]}; E. {df['option_E'][idx]}\n"
+        # Generate prompt
+        prompt = inst + ipt + "### Answer (only A, B, C, D, or E) :"
+        
+        # run model and get response
+        max_len = len(pl.tokenizer(prompt)['input_ids'])+100
+        responseInFull = pl(prompt, max_length= max_len, do_sample=True, 
+                         num_return_sequences=1, temperature=0.3, top_k=40, 
+                         top_p=0.5)
+        response = responseInFull[0]["generated_text"]
+        responses.append(response)
+        ans = response[len(prompt):]
+        suggested_ans.append(ans)
+    # Save results appending to the inital DF
+    df["responses"] = responses
+    df["suggested_answers"] = suggested_ans
+    df.to_csv(output_path + "_MedQA-USMLE_" + llm + "_" + str(length) + ".csv", index=False)
+    return 0
 
 def main():
     # Create argument parser
@@ -343,7 +481,7 @@ def main():
         run_medqa_usmle_medllama(args.input_file, args.llm, args.output_path)
     else:
         # Handle other cases or invalid inputs
-        print("Wrong input, check your cmd input.")
+        print("Wrong input, check your cmd inputs.")
 
 if __name__ == '__main__':
     main()
