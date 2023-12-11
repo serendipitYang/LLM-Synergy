@@ -464,7 +464,7 @@ def main():
     elif args.qa_dataset == "MedMCQA" and args.llm == "Medllama_13B":
         run_medmcqa_medllama(args.input_file, args.llm, args.output_path)
     elif args.qa_dataset == "PubMedQA" and args.llm == "Llama_13B":
-        run_pubmedqa_medllama(args.input_file, args.llm, args.output_path)
+        run_pubmedqa_llama(args.input_file, args.llm, args.output_path)
     elif args.qa_dataset == "PubMedQA" and args.llm == "Vicuna_13B":
         run_pubmedqa_vicuna(args.input_file, args.llm, args.output_path)
     elif args.qa_dataset == "PubMedQA" and args.llm == "Medalpaca_13B":
