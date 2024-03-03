@@ -5,7 +5,8 @@ import numpy as np
 from config import CONFIG, GPU_info
 import transformers
 from huggingface_hub import login
-login("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")
+hf_key = "typeyourhfapikeyhere"
+login(hf_key)
 from tqdm import tqdm
 
 # medmcqa
